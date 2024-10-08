@@ -108,7 +108,7 @@ class _BaseDatabase:
 
 
 class MongoDB(_BaseDatabase):
-    def __init__(self, key, dbname="UltroidDB"):
+    def __init__(self, key, dbname="pyPragalUB"):
         self.dB = MongoClient(key, serverSelectionTimeoutMS=5000)
         self.db = self.dB[dbname]
         super().__init__()
