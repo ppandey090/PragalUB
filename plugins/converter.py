@@ -11,6 +11,7 @@ __doc__ = get_help("help_converter")
 
 import os
 import time
+import json
 
 from . import LOGS
 
@@ -22,7 +23,7 @@ except ImportError:
 try:
     from PIL import Image
 except ImportError:
-    LOGS.info(f"{__file__}: PIL  not Installed.")
+    LOGS.info(f"{__file__}: PIL not Installed.")
     Image = None
 
 from telegraph import upload_file as uf
@@ -41,7 +42,6 @@ from . import (
 
 opn = []
 
-
 @ultroid_cmd(
     pattern="thumbnail$",
 )
@@ -53,13 +53,24 @@ async def _(e):
         dl = await r.download_media(thumb=-1)
     else:
         return await e.eor("`Reply to Photo or media with thumb...`")
-    variable = uf(dl)
-    os.remove(dl)
-    nn = f"https://graph.org{variable[0]}"
+    
+    # Upload file and handle the response properly
+    try:
+        variable = uf(dl)
+        if isinstance(variable, str):
+            variable = json.loads(variable)
+        nn = f"https://graph.org{variable[0]}"
+    except json.JSONDecodeError:
+        return await e.eor("Failed to upload to Telegraph. Response could not be parsed.")
+    except (IndexError, KeyError) as err:
+        return await e.eor(f"Unexpected response from Telegraph: {err}")
+    finally:
+        os.remove(dl)
+
+    # Set custom thumbnail
     udB.set_key("CUSTOM_THUMBNAIL", str(nn))
     await bash(f"wget {nn} -O resources/extras/ultroid.jpg")
     await e.eor(get_string("cvt_6").format(nn), link_preview=False)
-
 
 @ultroid_cmd(
     pattern="rename( (.*)|$)",
@@ -83,7 +94,6 @@ async def imak(event):
                 t,
                 get_string("com_5"),
             )
-
             file = image.name
         else:
             file = await event.client.download_media(reply.media)
@@ -103,7 +113,6 @@ async def imak(event):
     os.remove(inp)
     await xx.delete()
 
-
 conv_keys = {
     "img": "png",
     "sticker": "webp",
@@ -114,7 +123,6 @@ conv_keys = {
     "json": "json",
     "tgs": "tgs",
 }
-
 
 @ultroid_cmd(
     pattern="convert( (.*)|$)",
@@ -142,7 +150,6 @@ async def uconverter(event):
         os.remove(file)
     await xx.delete()
 
-
 @ultroid_cmd(
     pattern="doc( (.*)|$)",
 )
@@ -160,7 +167,6 @@ async def _(event):
     await event.reply(file=input_str, thumb=ULTConfig.thumb)
     await xx.delete()
     os.remove(input_str)
-
 
 @ultroid_cmd(
     pattern="open( (.*)|$)",
