@@ -12,16 +12,24 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          lfs: true
+          lfs: true  # Ensure Git LFS is enabled in the checkout action
           
       - name: Set up Git
         run: |
           git config --global user.name "${{ github.actor }}"
           git config --global user.email "${{ github.actor }}@users.noreply.github.com"
 
+      - name: Track Binary Files with Git LFS
+        run: |
+          git lfs install
+          git lfs track "resources/extras/logo_readme.jpg"
+          git lfs track "resources/fonts/Quivira.otf"
+          git add .gitattributes
+          git commit -m "Track binary files with Git LFS" || echo "No changes to commit"
+
       - name: Push to Hugging Face Hub
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          git remote add huggingface https://annayanx:$HF_TOKEN@huggingface.co/spaces/annayanx/betichodrandwahaiallah
+          git remote add huggingface https://annayanx:${{ secrets.HF_TOKEN }}@huggingface.co/spaces/annayanx/betichodrandwahaiallah
           git push huggingface main --force
