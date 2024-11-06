@@ -9,23 +9,25 @@ jobs:
   sync-to-hub:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository with LFS
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          lfs: true  # Ensure Git LFS is enabled in the checkout action
-          
+          lfs: true  # Ensures Git LFS is enabled
+
       - name: Set up Git
         run: |
           git config --global user.name "${{ github.actor }}"
           git config --global user.email "${{ github.actor }}@users.noreply.github.com"
 
-      - name: Track Binary Files with Git LFS
+      - name: Verify Git LFS
         run: |
           git lfs install
           git lfs track "resources/extras/logo_readme.jpg"
           git lfs track "resources/fonts/Quivira.otf"
           git add .gitattributes
           git commit -m "Track binary files with Git LFS" || echo "No changes to commit"
+          git lfs status  # Check the status of LFS-tracked files
 
       - name: Push to Hugging Face Hub
         env:
